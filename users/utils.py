@@ -1,6 +1,7 @@
 """
 Utility functions for user authentication and email handling
 """
+import os
 import base64
 import logging
 from email.mime.image import MIMEImage
@@ -17,8 +18,8 @@ VIDEOFLIX_LOGO_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAMkAAAAgCAYAAAC4jVxPAAAACXBIWXM
 
 def load_logo_image():
     """Load logo image from file or Base64 fallback."""
-    logo_path = finders.find('images/logo_videoflix.png')
-    if not logo_path:
+    logo_path = os.path.join(os.path.dirname(__file__), 'images', 'logo_videoflix.png')
+    if not os.path.exists(logo_path):
         logger.warning("Logo file not found, using Base64 fallback")
         return base64.b64decode(VIDEOFLIX_LOGO_BASE64)
     logger.info(f"Logo found at: {logo_path}")
