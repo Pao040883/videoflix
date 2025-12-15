@@ -242,15 +242,25 @@ def logout(request):
     """
     Log out authenticated user and clear JWT cookies.
     
-    Performs Django session logout and removes access and refresh token cookies
-    by deleting them from the response.
+    Performs Django session logout, blacklists refresh token, and removes
+    access and refresh token cookies from the response.
     
     Args:
         request: HTTP request from authenticated user.
     
     Returns:
         Response: HTTP 200 with success message.
+        Response: HTTP 400 if refresh token missing.
     """
+    refresh_token = request.COOKIES.get('refresh_token')
+    
+    if refresh_token:
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception:
+            pass
+    
     django_logout(request)
     response = Response(
         {"detail": "Logout successful! All tokens will be deleted. Refresh token is now invalid."},

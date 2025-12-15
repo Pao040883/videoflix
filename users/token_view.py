@@ -26,7 +26,10 @@ def token_refresh(request):
         new_access_token = str(token.access_token)
         
         response = Response(
-            {"detail": "Token refreshed successfully"},
+            {
+                "detail": "Token refreshed",
+                "access": new_access_token
+            },
             status=status.HTTP_200_OK
         )
         
