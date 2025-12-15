@@ -13,6 +13,9 @@ urlpatterns = [
     path('django-rq/', include('django_rq.urls')),
 ]
 
+# Media files - auch in Produktion über Django ausliefern (Nginx als Proxy)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Static files nur im DEBUG-Modus (in Produktion über WhiteNoise)
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
