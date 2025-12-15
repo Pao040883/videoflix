@@ -1,0 +1,3 @@
+"""
+Videoflix package.
+"""

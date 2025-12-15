@@ -1,0 +1,3 @@
+"""
+User app init.
+"""

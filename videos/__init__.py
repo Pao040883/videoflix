@@ -1,0 +1,3 @@
+"""
+Video app init.
+"""
