@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core.cache import cache
 from videos.models import Video, Genre
 from videos.serializers import VideoListSerializer, VideoDetailSerializer, GenreSerializer
+from videos.functions import get_video_hls_path, get_hls_segment_path, create_cors_response
 
 
 @api_view(['GET'])
@@ -73,39 +74,11 @@ class VideoDetailView(generics.RetrieveAPIView):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_hls_manifest(request, movie_id, resolution):
-    """
-    Serve HLS manifest file (.m3u8) for video streaming.
-    
-    Returns the HLS playlist file for the specified video and resolution.
-    Includes CORS headers to enable cross-origin video playback.
-    
-    Args:
-        request: HTTP request from authenticated user.
-        movie_id: ID of the video.
-        resolution: Video quality ('480p', '720p', or '1080p').
-    
-    Returns:
-        FileResponse: HLS manifest file with appropriate content type.
-    
-    Raises:
-        Http404: If video or manifest file not found.
-    """
+    """Serve HLS manifest file (.m3u8) for video streaming."""
     try:
         video = Video.objects.get(id=movie_id, is_published=True)
-        
-        hls_dir = os.path.join(settings.HLS_OUTPUT_PATH, f'video_{movie_id}')
-        manifest_file = os.path.join(hls_dir, f'{resolution}.m3u8')
-        
-        if not os.path.exists(manifest_file):
-            raise Http404("Manifest not found")
-        
-        response = FileResponse(open(manifest_file, 'rb'), content_type='application/vnd.apple.mpegurl')
-        response['Content-Disposition'] = f'inline; filename="{resolution}.m3u8"'
-        response['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
-        response['Access-Control-Allow-Credentials'] = 'true'
-        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response['Pragma'] = 'no-cache'
-        response['Expires'] = '0'
+        manifest_file = get_video_hls_path(movie_id, resolution)
+        response = create_cors_response(manifest_file, 'application/vnd.apple.mpegurl', request, disposition=f'inline; filename="{resolution}.m3u8"')
         return response
     except Video.DoesNotExist:
         raise Http404("Video not found")
@@ -114,38 +87,12 @@ def get_hls_manifest(request, movie_id, resolution):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def get_hls_segment(request, movie_id, resolution, segment):
-    """
-    Serve HLS video segment (.ts file) for streaming.
-    
-    Returns the requested video segment for HLS adaptive bitrate streaming.
-    Includes CORS headers to enable cross-origin video playback.
-    
-    Args:
-        request: HTTP request from authenticated user.
-        movie_id: ID of the video.
-        resolution: Video quality ('480p', '720p', or '1080p').
-        segment: Segment filename (e.g., 'segment0.ts').
-    
-    Returns:
-        FileResponse: Video segment with MPEG-TS content type.
-    
-    Raises:
-        Http404: If video or segment file not found.
-    """
+    """Serve HLS video segment (.ts file) for streaming."""
     try:
         video = Video.objects.get(id=movie_id, is_published=True)
-        
-        hls_dir = os.path.join(settings.HLS_OUTPUT_PATH, f'video_{movie_id}')
-        segment_file = os.path.join(hls_dir, f'{segment}')
-        
-        if not os.path.exists(segment_file):
-            raise Http404("Segment not found")
-        
-        response = FileResponse(open(segment_file, 'rb'), content_type='video/MP2T')
-        response['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
-        response['Access-Control-Allow-Credentials'] = 'true'
+        segment_file = get_hls_segment_path(movie_id, segment)
+        response = create_cors_response(segment_file, 'video/MP2T', request, cache_control='public, max-age=31536000, immutable')
         response['Accept-Ranges'] = 'bytes'
-        response['Cache-Control'] = 'public, max-age=31536000, immutable'
         return response
     except Video.DoesNotExist:
         raise Http404("Video not found")

@@ -9,8 +9,10 @@ from django.conf import settings
 from django.db import transaction
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.models import EmailVerificationToken, PasswordResetToken
+from users.models import EmailVerificationToken, PasswordResetToken, CustomUser
 from users.utils import send_verification_email, send_password_reset_email
+from rest_framework import serializers
+from django.contrib.auth import authenticate
 
 
 def create_user_with_verification(user):
@@ -108,3 +110,29 @@ def create_password_reset_token(user):
     uidb64 = base64.b64encode(str(user.id).encode()).decode()
     reset_link = f"{settings.FRONTEND_URL}/pages/auth/confirm_password.html?uid={uidb64}&token={reset_token.token}"
     send_password_reset_email(user, reset_link)
+
+
+def validate_password_match(password, confirmed_password):
+    """Validate password and confirmed_password match."""
+    if password != confirmed_password:
+        raise serializers.ValidationError({"password": "Passwords do not match."})
+
+
+def validate_email_unique(email):
+    """Validate email is unique and not already registered."""
+    if CustomUser.objects.filter(email=email).exists():
+        raise serializers.ValidationError("Please check your inputs and try again.")
+
+
+def validate_user_authentication(email, password):
+    """Authenticate user and return authenticated user."""
+    user = authenticate(username=email, password=password)
+    if not user:
+        raise serializers.ValidationError("Please check your inputs and try again.")
+    return user
+
+
+def validate_email_verified(user):
+    """Check if user's email is verified."""
+    if not user.is_email_verified:
+        raise serializers.ValidationError("Please confirm your email first.")

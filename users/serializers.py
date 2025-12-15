@@ -4,6 +4,7 @@ User serializers.
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from users.models import CustomUser
+from users.functions import validate_password_match, validate_email_unique, validate_user_authentication, validate_email_verified
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -26,18 +27,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """Validate that password and confirmed_password match."""
-        if data['password'] != data['confirmed_password']:
-            raise serializers.ValidationError(
-                {"password": "Passwords do not match."}
-            )
+        validate_password_match(data['password'], data['confirmed_password'])
         return data
 
     def validate_email(self, value):
         """Validate that email is unique and not already registered."""
-        if CustomUser.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                "Please check your inputs and try again."
-            )
+        validate_email_unique(value)
         return value
 
     def create(self, validated_data):
@@ -69,15 +64,8 @@ class LoginSerializer(serializers.Serializer):
 
     def validate(self, data):
         """Authenticate user and verify email confirmation status."""
-        user = authenticate(username=data['email'], password=data['password'])
-        if not user:
-            raise serializers.ValidationError(
-                "Please check your inputs and try again."
-            )
-        if not user.is_email_verified:
-            raise serializers.ValidationError(
-                "Please confirm your email first."
-            )
+        user = validate_user_authentication(data['email'], data['password'])
+        validate_email_verified(user)
         data['user'] = user
         return data
 
@@ -131,9 +119,6 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
     def validate(self, data):
         """Validate that new_password and confirm_password match."""
-        if data['new_password'] != data['confirm_password']:
-            raise serializers.ValidationError(
-                {"password": "Passwords do not match."}
-            )
+        validate_password_match(data['new_password'], data['confirm_password'])
         return data
 
