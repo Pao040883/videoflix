@@ -63,7 +63,7 @@ def set_access_token_cookie(response, access_token):
         max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds(),
         httponly=True,
         samesite='Lax',
-        secure=False
+        secure=not settings.DEBUG
     )
 
 
@@ -75,7 +75,7 @@ def set_refresh_token_cookie(response, refresh_token):
         max_age=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds(),
         httponly=True,
         samesite='Lax',
-        secure=False
+        secure=not settings.DEBUG
     )
 
 
