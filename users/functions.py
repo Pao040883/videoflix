@@ -6,18 +6,17 @@ import base64
 from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
-from django.db import transaction
 from rest_framework_simplejwt.tokens import RefreshToken
-
 from users.models import EmailVerificationToken, PasswordResetToken, CustomUser
-from users.utils import send_verification_email, send_password_reset_email
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 
 
 def create_user_with_verification(user):
     """
-    Create verification token and send verification email.
+    Create verification token for user.
+    
+    Email is automatically sent via post_save signal.
     
     Args:
         user: CustomUser instance.
@@ -26,15 +25,11 @@ def create_user_with_verification(user):
         dict: User data with id and email.
     """
     EmailVerificationToken.objects.filter(user=user).delete()
-    token_obj = EmailVerificationToken.objects.create(
+    EmailVerificationToken.objects.create(
         user=user,
         token=str(uuid.uuid4()),
         expires_at=timezone.now() + timedelta(hours=24)
     )
-    uidb64 = base64.b64encode(str(user.id).encode()).decode()
-    verification_link = f"{settings.FRONTEND_URL}/pages/auth/activate.html?uid={uidb64}&token={token_obj.token}"
-    send_verification_email(user, verification_link)
-    
     return {
         "user": {
             "id": user.id,
@@ -93,7 +88,9 @@ def set_jwt_cookies(response, access_token, refresh_token):
 
 def create_password_reset_token(user):
     """
-    Create password reset token and send reset email.
+    Create password reset token for user.
+    
+    Email is automatically sent via post_save signal.
     
     Args:
         user: CustomUser instance.
@@ -102,14 +99,11 @@ def create_password_reset_token(user):
         None
     """
     PasswordResetToken.objects.filter(user=user).delete()
-    reset_token = PasswordResetToken.objects.create(
+    PasswordResetToken.objects.create(
         user=user,
         token=str(uuid.uuid4()),
         expires_at=timezone.now() + timedelta(hours=24)
     )
-    uidb64 = base64.b64encode(str(user.id).encode()).decode()
-    reset_link = f"{settings.FRONTEND_URL}/pages/auth/confirm_password.html?uid={uidb64}&token={reset_token.token}"
-    send_password_reset_email(user, reset_link)
 
 
 def validate_password_match(password, confirmed_password):
