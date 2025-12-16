@@ -361,22 +361,35 @@ backend/
 │       ├── verify_email.html
 │       └── reset_password.html
 ├── users/                    # User app
+│   ├── api/                 # API layer
+│   │   ├── __init__.py
+│   │   ├── views.py         # Authentication views (all endpoints)
+│   │   ├── serializers.py   # User serializers
+│   │   └── urls.py          # User routes
+│   ├── tests/               # Test suite
+│   │   ├── __init__.py
+│   │   └── test_auth.py     # Authentication tests
 │   ├── models.py            # CustomUser, Tokens
-│   ├── views.py             # Authentication views (all endpoints)
-│   ├── serializers.py       # User serializers
 │   ├── functions.py         # Authentication helper functions
 │   ├── utils.py             # Email utilities
-│   ├── images/              # Static images (e.g., logo)
-│   └── urls.py              # User routes
+│   ├── signals.py           # Django signals
+│   ├── admin.py             # Admin configuration
+│   └── images/              # Static images (e.g., logo)
 ├── videos/                   # Video app
+│   ├── api/                 # API layer
+│   │   ├── __init__.py
+│   │   ├── views.py         # Video streaming views
+│   │   ├── serializers.py   # Video serializers
+│   │   └── urls.py          # Video routes
+│   ├── tests/               # Test suite
+│   │   ├── __init__.py
+│   │   └── test_videos.py   # Video API tests
 │   ├── models.py            # Video, Genre, HLSQuality
-│   ├── views.py             # Video streaming views
-│   ├── serializers.py       # Video serializers
 │   ├── functions.py         # Video helper functions
 │   ├── tasks.py             # Background tasks (Django RQ)
 │   ├── utils.py             # Video processing utilities
 │   ├── signals.py           # Django signals
-│   └── urls.py              # Video routes
+│   └── admin.py             # Admin configuration
 ├── videoflix/                # Project settings
 │   ├── settings.py          # Django settings
 │   ├── urls.py              # Main URL config
