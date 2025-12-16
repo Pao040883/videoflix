@@ -73,13 +73,15 @@ def generate_hls_streams(video):
     video.is_processing = True
     video.save()
     try:
+        logger.info(f"Starting HLS generation for video {video.id}")
         hls_dir = os.path.join(settings.HLS_OUTPUT_PATH, f'video_{video.id}')
         os.makedirs(hls_dir, exist_ok=True)
         for quality, settings_dict in QUALITY_SETTINGS.items():
             process_single_quality(video, hls_dir, quality, settings_dict)
         finalize_video_processing(video, hls_dir)
-    except subprocess.CalledProcessError as e:
-        logger.error(f"FFmpeg error for video {video.id}: {str(e)}")
+        logger.info(f"Completed HLS generation for video {video.id}")
+    except Exception as e:
+        logger.error(f"HLS generation failed for video {video.id}: {type(e).__name__}: {str(e)}", exc_info=True)
         video.is_processing = False
         video.save()
 
