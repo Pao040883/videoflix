@@ -21,6 +21,7 @@ An example frontend implementation using vanilla JavaScript is available at:
 - [Configuration](#configuration)
 - [Running the Application](#running-the-application)
 - [API Documentation](#api-documentation)
+- [Testing](#testing)
 - [Video Processing](#video-processing)
 - [Project Structure](#project-structure)
 - [Development](#development)
@@ -266,6 +267,56 @@ curl -X POST http://localhost:8000/api/login/ \
 curl http://localhost:8000/api/video/ \
   -H "Cookie: access_token=your_token_here"
 ```
+
+## 🧪 Testing
+
+The project includes a comprehensive test suite covering authentication and video API functionality.
+
+### Run All Tests
+
+```bash
+# Inside Docker container
+docker exec videoflix_backend python manage.py test
+
+# With verbose output
+docker exec videoflix_backend python manage.py test --verbosity=2
+```
+
+### Run Specific Test Module
+
+```bash
+# Authentication tests only
+docker exec videoflix_backend python manage.py test users.tests
+
+# Video tests only
+docker exec videoflix_backend python manage.py test videos.tests
+```
+
+### Run Specific Test Class
+
+```bash
+docker exec videoflix_backend python manage.py test users.tests.test_auth.LoginLogoutTests
+```
+
+### Test Coverage
+
+**19 Tests Total** covering:
+
+#### Authentication Tests (13 tests)
+- ✅ User registration (success & validation)
+- ✅ Email verification
+- ✅ Login/Logout with JWT cookies
+- ✅ Token refresh mechanism
+- ✅ Password reset flow
+- ✅ Invalid input validation
+
+#### Video API Tests (6 tests)
+- ✅ Video list (authenticated/unauthenticated)
+- ✅ Video detail retrieval
+- ✅ Permission controls
+- ✅ Empty list handling
+
+All tests use Django's `TestCase` with isolated test databases and DRF's `APIClient` for API testing.
 
 ## 🎞️ Video Processing
 
