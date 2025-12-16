@@ -67,7 +67,7 @@ An example frontend implementation using vanilla JavaScript is available at:
 | **Video Processing** | FFmpeg |
 | **Static Files** | WhiteNoise |
 | **Deployment** | Docker, Docker Compose, Gunicorn |
-| **Email** | SMTP (Strato) |
+| **Email** | SMTP (configurable) |
 
 ## 📦 Prerequisites
 
@@ -81,8 +81,8 @@ An example frontend implementation using vanilla JavaScript is available at:
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd backend
+git clone https://github.com/Pao040883/videoflix.git
+cd videoflix/backend
 ```
 
 ### 2. Configure Environment Variables
@@ -114,7 +114,7 @@ REDIS_PORT=6379
 REDIS_DB=0
 
 # Email Configuration
-EMAIL_HOST=smtp.strato.de
+EMAIL_HOST=smtp.your-provider.com
 EMAIL_PORT=587
 EMAIL_HOST_USER=your-email@example.com
 EMAIL_HOST_PASSWORD=your-email-password
@@ -153,7 +153,7 @@ Configure allowed origins in `.env`:
 
 ```env
 CORS_ALLOWED_ORIGINS=http://127.0.0.1:5500,http://localhost:5500
-CSRF_TRUSTED_ORIGINS=http://localhost:4200,http://127.0.0.1:4200  # For Django Admin only
+CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000  # For Django Admin only
 ```
 
 ### JWT Token Settings
