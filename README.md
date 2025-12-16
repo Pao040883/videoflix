@@ -153,7 +153,7 @@ Configure allowed origins in `.env`:
 
 ```env
 CORS_ALLOWED_ORIGINS=http://127.0.0.1:5500,http://localhost:5500
-CSRF_TRUSTED_ORIGINS=http://localhost:4200,http://127.0.0.1:4200
+CSRF_TRUSTED_ORIGINS=http://localhost:4200,http://127.0.0.1:4200  # For Django Admin only
 ```
 
 ### JWT Token Settings
@@ -437,7 +437,8 @@ send_mail('Test', 'Message', 'from@example.com', ['to@example.com'])
 ### Security Considerations
 
 - ✅ JWT tokens stored in HttpOnly cookies (XSS protection)
-- ✅ CSRF protection enabled
+- ✅ Stateless JWT authentication (no session-based CSRF vulnerability)
+- ✅ CSRF protection for Django Admin (via middleware)
 - ✅ Password hashing with Django's default PBKDF2
 - ✅ Email verification required for activation
 - ⚠️ Change `SECRET_KEY` in production
