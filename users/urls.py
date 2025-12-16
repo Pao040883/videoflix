@@ -10,8 +10,8 @@ from users.views import (
     password_reset,
     password_reset_confirm,
     user_profile,
+    token_refresh,
 )
-from users.token_view import token_refresh
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
