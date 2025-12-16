@@ -214,7 +214,7 @@ Base URL: `http://localhost:8000/api/`
 | POST | `/api/register/` | Register new user | ❌ |
 | POST | `/api/login/` | Login user | ❌ |
 | POST | `/api/logout/` | Logout user | ✅ |
-| POST | `/api/token/refresh/` | Refresh access token | ✅ |
+| POST | `/api/token/refresh/` | Refresh access token | ❌ |
 | GET | `/api/activate/<uidb64>/<token>/` | Activate account | ❌ |
 | POST | `/api/password_reset/` | Request password reset | ❌ |
 | POST | `/api/password_confirm/<uidb64>/<token>/` | Confirm password reset | ❌ |
@@ -304,16 +304,20 @@ backend/
 │       └── reset_password.html
 ├── users/                    # User app
 │   ├── models.py            # CustomUser, Tokens
-│   ├── views.py             # Authentication views
+│   ├── views.py             # Authentication views (all endpoints)
 │   ├── serializers.py       # User serializers
+│   ├── functions.py         # Authentication helper functions
 │   ├── utils.py             # Email utilities
+│   ├── images/              # Static images (e.g., logo)
 │   └── urls.py              # User routes
 ├── videos/                   # Video app
 │   ├── models.py            # Video, Genre, HLSQuality
 │   ├── views.py             # Video streaming views
 │   ├── serializers.py       # Video serializers
-│   ├── tasks.py             # Background tasks
+│   ├── functions.py         # Video helper functions
+│   ├── tasks.py             # Background tasks (Django RQ)
 │   ├── utils.py             # Video processing utilities
+│   ├── signals.py           # Django signals
 │   └── urls.py              # Video routes
 ├── videoflix/                # Project settings
 │   ├── settings.py          # Django settings
@@ -416,6 +420,14 @@ send_mail('Test', 'Message', 'from@example.com', ['to@example.com'])
 ```
 
 ## 📝 Notes
+
+### Code Quality Standards
+
+- ✅ All functions max 14 lines (excluding docstrings)
+- ✅ Comprehensive docstrings on all classes, methods, and functions
+- ✅ Modular design with helper function modules
+- ✅ Clear separation of concerns (views, models, serializers, utils)
+- ✅ Type hints and proper error handling
 
 ### Security Considerations
 
