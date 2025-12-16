@@ -60,18 +60,8 @@ def generate_jwt_tokens(user):
     return access_token, refresh_token
 
 
-def set_jwt_cookies(response, access_token, refresh_token):
-    """
-    Set JWT tokens as HttpOnly cookies on response.
-    
-    Args:
-        response: Django Response object.
-        access_token: Access token string.
-        refresh_token: Refresh token string.
-    
-    Returns:
-        Response: Modified response with cookies set.
-    """
+def set_access_token_cookie(response, access_token):
+    """Set access token as HttpOnly cookie."""
     response.set_cookie(
         key='access_token',
         value=access_token,
@@ -80,6 +70,10 @@ def set_jwt_cookies(response, access_token, refresh_token):
         samesite='Lax',
         secure=False
     )
+
+
+def set_refresh_token_cookie(response, refresh_token):
+    """Set refresh token as HttpOnly cookie."""
     response.set_cookie(
         key='refresh_token',
         value=refresh_token,
@@ -88,6 +82,12 @@ def set_jwt_cookies(response, access_token, refresh_token):
         samesite='Lax',
         secure=False
     )
+
+
+def set_jwt_cookies(response, access_token, refresh_token):
+    """Set JWT tokens as HttpOnly cookies on response."""
+    set_access_token_cookie(response, access_token)
+    set_refresh_token_cookie(response, refresh_token)
     return response
 
 
@@ -136,3 +136,33 @@ def validate_email_verified(user):
     """Check if user's email is verified."""
     if not user.is_email_verified:
         raise serializers.ValidationError("Please confirm your email first.")
+
+
+def decode_uid_and_get_user(uidb64):
+    """Decode base64 user ID and retrieve user."""
+    uid = int(base64.b64decode(uidb64).decode())
+    return CustomUser.objects.get(id=uid)
+
+
+def validate_token_not_expired(token_obj, error_message):
+    """Check if token is expired and return error response if so."""
+    from rest_framework.response import Response
+    from rest_framework import status
+    if token_obj.is_expired():
+        return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+    return None
+
+
+def activate_user_account(user, verification_token):
+    """Activate user account and delete verification token."""
+    user.is_active = True
+    user.is_email_verified = True
+    user.save()
+    verification_token.delete()
+
+
+def update_user_password(user, new_password, reset_token):
+    """Update user password and delete reset token."""
+    user.set_password(new_password)
+    user.save()
+    reset_token.delete()

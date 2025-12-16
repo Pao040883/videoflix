@@ -16,35 +16,14 @@ from videos.functions import get_video_hls_path, get_hls_segment_path, create_co
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def video_list(request):
-    """
-    Retrieve list of all published videos with Redis caching.
-    
-    Returns a cached list of published videos ordered by creation date.
-    Cache is valid for 5 minutes to reduce database queries.
-    
-    Args:
-        request: HTTP request from authenticated user.
-    
-    Returns:
-        Response: HTTP 200 with serialized list of published videos.
-    
-    Cache:
-        Key: 'video_list_published'
-        Timeout: 300 seconds (5 minutes)
-    """
+    """Retrieve list of all published videos with Redis caching."""
     cache_key = 'video_list_published'
     videos_data = cache.get(cache_key)
-    
     if videos_data is None:
         videos = Video.objects.filter(is_published=True).order_by('-created_at')
-        serializer = VideoListSerializer(
-            videos,
-            many=True,
-            context={'request': request}
-        )
+        serializer = VideoListSerializer(videos, many=True, context={'request': request})
         videos_data = serializer.data
-        cache.set(cache_key, videos_data, timeout=300)  # Cache for 5 minutes
-    
+        cache.set(cache_key, videos_data, timeout=300)
     return Response(videos_data, status=200)
 
 

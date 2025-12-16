@@ -15,7 +15,11 @@ from users.functions import (
     create_user_with_verification,
     generate_jwt_tokens,
     set_jwt_cookies,
-    create_password_reset_token
+    create_password_reset_token,
+    decode_uid_and_get_user,
+    validate_token_not_expired,
+    activate_user_account,
+    update_user_password
 )
 
 logger = logging.getLogger(__name__)
@@ -48,19 +52,9 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
     def create(self, request, *args, **kwargs):
-        """
-        Create a new user account with email verification.
-        
-        Args:
-            request: HTTP request containing email, password, and confirmed_password.
-        
-        Returns:
-            Response: HTTP 201 with success message if registration succeeds.
-            Response: HTTP 500 if email sending fails.
-        """
+        """Create a new user account with email verification."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
         try:
             with transaction.atomic():
                 user = serializer.save()
@@ -115,52 +109,17 @@ class LoginView(generics.GenericAPIView):
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def activate_account(request, uidb64, token):
-    """
-    Activate user account via email verification link.
-    
-    Decodes the base64-encoded user ID, validates the verification token,
-    and activates the user account if the token is valid and not expired.
-    
-    Args:
-        request: HTTP request object.
-        uidb64: Base64-encoded user ID.
-        token: Email verification token string.
-    
-    Returns:
-        Response: HTTP 200 if account activated successfully.
-        Response: HTTP 400 if token is invalid or expired.
-    
-    Raises:
-        User.DoesNotExist: If user ID is invalid.
-    """
+    """Activate user account via email verification link."""
     try:
-        uid = int(base64.b64decode(uidb64).decode())
-        user = CustomUser.objects.get(id=uid)
-        verification_token = EmailVerificationToken.objects.get(
-            user=user,
-            token=token
-        )
-
-        if verification_token.is_expired():
-            return Response(
-                {"error": "Verification link expired."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        user.is_active = True
-        user.is_email_verified = True
-        user.save()
-        verification_token.delete()
-
-        return Response(
-            {"message": "Account successfully activated."},
-            status=status.HTTP_200_OK
-        )
+        user = decode_uid_and_get_user(uidb64)
+        verification_token = EmailVerificationToken.objects.get(user=user, token=token)
+        error_response = validate_token_not_expired(verification_token, "Verification link expired.")
+        if error_response:
+            return error_response
+        activate_user_account(user, verification_token)
+        return Response({"message": "Account successfully activated."}, status=status.HTTP_200_OK)
     except (CustomUser.DoesNotExist, EmailVerificationToken.DoesNotExist, ValueError):
-        return Response(
-            {"error": "Invalid verification link."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"error": "Invalid verification link."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -225,55 +184,19 @@ def password_reset(request):
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def password_reset_confirm(request, uidb64, token):
-    """
-    Confirm password reset and update user password.
-    
-    Validates the password reset token, verifies it hasn't expired,
-    and updates the user's password to the new value. Deletes the
-    reset token after successful password update.
-    
-    Args:
-        request: HTTP request containing new_password and confirm_password.
-        uidb64: Base64-encoded user ID.
-        token: Password reset token string.
-    
-    Returns:
-        Response: HTTP 200 if password updated successfully.
-        Response: HTTP 400 if token invalid, expired, or passwords don't match.
-    
-    Raises:
-        User.DoesNotExist: If user ID is invalid.
-    """
+    """Confirm password reset and update user password."""
     try:
-        uid = int(base64.b64decode(uidb64).decode())
-        user = CustomUser.objects.get(id=uid)
-        reset_token = PasswordResetToken.objects.get(
-            user=user,
-            token=token
-        )
-
-        if reset_token.is_expired():
-            return Response(
-                {"error": "Reset link expired."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
+        user = decode_uid_and_get_user(uidb64)
+        reset_token = PasswordResetToken.objects.get(user=user, token=token)
+        error_response = validate_token_not_expired(reset_token, "Reset link expired.")
+        if error_response:
+            return error_response
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        user.set_password(serializer.validated_data['new_password'])
-        user.save()
-        reset_token.delete()
-
-        return Response(
-            {"detail": "Your Password has been successfully reset."},
-            status=status.HTTP_200_OK
-        )
+        update_user_password(user, serializer.validated_data['new_password'], reset_token)
+        return Response({"detail": "Your Password has been successfully reset."}, status=status.HTTP_200_OK)
     except (CustomUser.DoesNotExist, PasswordResetToken.DoesNotExist, ValueError):
-        return Response(
-            {"error": "Invalid reset link."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"error": "Invalid reset link."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])

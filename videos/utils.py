@@ -76,15 +76,8 @@ def generate_hls_streams(video):
         hls_dir = os.path.join(settings.HLS_OUTPUT_PATH, f'video_{video.id}')
         os.makedirs(hls_dir, exist_ok=True)
         for quality, settings_dict in QUALITY_SETTINGS.items():
-            output_file = os.path.join(hls_dir, f'{quality}.m3u8')
-            segment_pattern = os.path.join(hls_dir, f'{quality}_%03d.ts')
-            command = build_ffmpeg_hls_command(video.video_file.path, output_file, segment_pattern, settings_dict)
-            subprocess.run(command, check=True, capture_output=True)
-            create_hls_quality_record(video, quality, settings_dict)
-            logger.info(f"Generated {quality} stream for video {video.id}")
-        video.hls_path = f'hls/video_{video.id}/'
-        video.is_processing = False
-        video.save()
+            process_single_quality(video, hls_dir, quality, settings_dict)
+        finalize_video_processing(video, hls_dir)
     except subprocess.CalledProcessError as e:
         logger.error(f"FFmpeg error for video {video.id}: {str(e)}")
         video.is_processing = False
