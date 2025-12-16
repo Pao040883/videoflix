@@ -68,6 +68,23 @@ def build_ffprobe_duration_command(video_path):
     return ['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1:noprint_wrappers=1', video_path]
 
 
+def process_single_quality(video, hls_dir, quality, settings_dict):
+    """Process single HLS quality variant."""
+    output_file = os.path.join(hls_dir, f'{quality}.m3u8')
+    segment_pattern = os.path.join(hls_dir, f'{quality}_%03d.ts')
+    command = build_ffmpeg_hls_command(video.video_file.path, output_file, segment_pattern, settings_dict)
+    subprocess.run(command, check=True, capture_output=True)
+    create_hls_quality_record(video, quality, settings_dict)
+    logger.info(f"Generated {quality} stream for video {video.id}")
+
+
+def finalize_video_processing(video, hls_dir):
+    """Finalize video processing by updating paths and status."""
+    video.hls_path = f'hls/video_{video.id}/'
+    video.is_processing = False
+    video.save()
+
+
 def generate_hls_streams(video):
     """Generate HLS streams with multiple quality variants (480p, 720p, 1080p)."""
     video.is_processing = True
