@@ -133,15 +133,14 @@ def logout(request):
     """
     Log out authenticated user and clear JWT cookies.
     
-    Performs Django session logout, blacklists refresh token, and removes
-    access and refresh token cookies from the response.
+    Blacklists refresh token and removes access and refresh token cookies
+    from the response. No Django session is used (JWT-only authentication).
     
     Args:
         request: HTTP request from authenticated user.
     
     Returns:
-        Response: HTTP 200 with success message.
-        Response: HTTP 400 if refresh token missing.
+        Response: HTTP 200 with success message and deleted cookies.
     """
     logger = logging.getLogger(__name__)
     logger.info(f"Logout request received - User: {request.user}, IP: {request.META.get('REMOTE_ADDR')}")
@@ -233,7 +232,20 @@ def user_profile(request):
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def token_refresh(request):
-    """Refresh access token using refresh token from cookie."""
+    """
+    Refresh access token using refresh token from HttpOnly cookie.
+    
+    Generates a new access token from the refresh token stored in the
+    'refresh_token' cookie and sets it as a new HttpOnly cookie.
+    
+    Args:
+        request: HTTP request containing refresh_token cookie.
+    
+    Returns:
+        Response: HTTP 200 with new access token cookie.
+        Response: HTTP 400 if refresh token missing.
+        Response: HTTP 401 if refresh token invalid or expired.
+    """
     refresh_token = request.COOKIES.get('refresh_token')
     if not refresh_token:
         return Response({"error": "Refresh token missing."}, status=status.HTTP_400_BAD_REQUEST)

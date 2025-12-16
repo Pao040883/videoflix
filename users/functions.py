@@ -56,7 +56,7 @@ def generate_jwt_tokens(user):
 
 
 def set_access_token_cookie(response, access_token):
-    """Set access token as HttpOnly cookie."""
+    """Set access token as HttpOnly cookie. Secure flag set in production (DEBUG=False)."""
     response.set_cookie(
         key='access_token',
         value=access_token,
@@ -68,7 +68,7 @@ def set_access_token_cookie(response, access_token):
 
 
 def set_refresh_token_cookie(response, refresh_token):
-    """Set refresh token as HttpOnly cookie."""
+    """Set refresh token as HttpOnly cookie. Secure flag set in production (DEBUG=False)."""
     response.set_cookie(
         key='refresh_token',
         value=refresh_token,
