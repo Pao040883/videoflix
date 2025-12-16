@@ -6,7 +6,6 @@ import logging
 from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from django.contrib.auth import login, logout as django_logout
 from django.db import transaction
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
@@ -99,7 +98,6 @@ class LoginView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         
-        login(request, user)
         access_token, refresh_token = generate_jwt_tokens(user)
         
         response = Response(
@@ -150,7 +148,6 @@ def logout(request):
         except Exception:
             pass
     
-    django_logout(request)
     response = Response(
         {"detail": "Logout successful! All tokens will be deleted. Refresh token is now invalid."},
         status=status.HTTP_200_OK
