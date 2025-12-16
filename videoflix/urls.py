@@ -9,8 +9,8 @@ from django.views.static import serve
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('users.urls')),
-    path('api/', include('videos.urls')),
+    path('api/', include('users.api.urls')),
+    path('api/', include('videos.api.urls')),
     path('django-rq/', include('django_rq.urls')),
     
     # Media files - mit explizitem serve View für Gunicorn

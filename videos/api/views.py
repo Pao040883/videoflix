@@ -9,7 +9,7 @@ from django.http import FileResponse, Http404
 from django.conf import settings
 from django.core.cache import cache
 from videos.models import Video, Genre
-from videos.serializers import VideoListSerializer, VideoDetailSerializer, GenreSerializer
+from videos.api.serializers import VideoListSerializer, VideoDetailSerializer, GenreSerializer
 from videos.functions import get_video_hls_path, get_hls_segment_path, create_cors_response
 
 

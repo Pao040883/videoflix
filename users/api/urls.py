@@ -2,7 +2,7 @@
 User URLs.
 """
 from django.urls import path
-from users.views import (
+from users.api.views import (
     RegisterView,
     LoginView,
     logout,

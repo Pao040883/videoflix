@@ -2,7 +2,7 @@
 Video URLs.
 """
 from django.urls import path
-from videos.views import (
+from videos.api.views import (
     video_list,
     get_hls_manifest,
     get_hls_segment,
