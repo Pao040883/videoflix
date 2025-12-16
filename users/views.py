@@ -7,6 +7,8 @@ from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.db import transaction
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from django.conf import settings
@@ -69,13 +71,15 @@ class RegisterView(generics.CreateAPIView):
             )
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class LoginView(generics.GenericAPIView):
     """
     API view for user authentication and JWT token generation.
     
     This view authenticates users and generates JWT access and refresh tokens.
     Tokens are set as secure HttpOnly cookies to prevent XSS attacks. Only
-    users with verified email addresses can log in.
+    users with verified email addresses can log in. Also sets CSRF cookie for
+    frontend compatibility.
     
     Attributes:
         serializer_class: LoginSerializer for credential validation.
