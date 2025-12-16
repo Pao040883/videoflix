@@ -104,6 +104,77 @@ class LoginLogoutTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
+class TokenRefreshTests(TestCase):
+    """Test JWT token refresh functionality."""
+
+    def setUp(self):
+        """Set up test client and verified user."""
+        self.client = APIClient()
+        self.user = CustomUser.objects.create_user(
+            email='test@example.com',
+            password='TestPass123!'
+        )
+        self.user.is_email_verified = True
+        self.user.save()
+        self.login_url = '/api/login/'
+        self.refresh_url = '/api/token/refresh/'
+
+    def test_token_refresh_success(self):
+        """Test successful token refresh."""
+        # Login to get refresh token
+        self.client.post(self.login_url, {'email': 'test@example.com', 'password': 'TestPass123!'})
+        # Refresh token
+        response = self.client.post(self.refresh_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access_token', response.cookies)
+
+    def test_token_refresh_without_refresh_token(self):
+        """Test token refresh fails without refresh token."""
+        response = self.client.post(self.refresh_url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class InvalidInputTests(TestCase):
+    """Test validation for invalid inputs."""
+
+    def setUp(self):
+        """Set up test client."""
+        self.client = APIClient()
+        self.register_url = '/api/register/'
+
+    def test_registration_invalid_email(self):
+        """Test registration fails with invalid email."""
+        data = {
+            'email': 'not-an-email',
+            'password': 'TestPass123!',
+            'confirmed_password': 'TestPass123!'
+        }
+        response = self.client.post(self.register_url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_registration_weak_password(self):
+        """Test registration fails with weak password."""
+        data = {
+            'email': 'test@example.com',
+            'password': '123',
+            'confirmed_password': '123'
+        }
+        response = self.client.post(self.register_url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_login_wrong_password(self):
+        """Test login fails with wrong password."""
+        user = CustomUser.objects.create_user(
+            email='test@example.com',
+            password='TestPass123!'
+        )
+        user.is_email_verified = True
+        user.save()
+        data = {'email': 'test@example.com', 'password': 'WrongPassword!'}
+        response = self.client.post('/api/login/', data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
 class PasswordResetTests(TestCase):
     """Test password reset functionality."""
 

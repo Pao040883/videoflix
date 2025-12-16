@@ -82,4 +82,47 @@ class VideoDetailTests(TestCase):
         self.assertEqual(len(response.data), 0)
 
 
+class VideoUploadPermissionTests(TestCase):
+    """Test video upload permission controls."""
 
+    def setUp(self):
+        """Set up test client, regular user, and admin user."""
+        self.client = APIClient()
+        # Regular user
+        self.regular_user = CustomUser.objects.create_user(
+            email='user@example.com',
+            password='TestPass123!'
+        )
+        self.regular_user.is_email_verified = True
+        self.regular_user.save()
+        # Admin user
+        self.admin_user = CustomUser.objects.create_superuser(
+            email='admin@example.com',
+            password='AdminPass123!'
+        )
+        self.admin_user.is_email_verified = True
+        self.admin_user.save()
+        from videos.models import Genre
+        self.genre = Genre.objects.create(name='Action')
+        self.upload_url = '/api/video/'
+
+    def test_regular_user_cannot_upload_video(self):
+        """Test video upload endpoint only accepts GET requests (no POST)."""
+        self.client.force_authenticate(user=self.regular_user)
+        video_file = SimpleUploadedFile('test_video.mp4', b'file_content', content_type='video/mp4')
+        data = {
+            'title': 'Test Video',
+            'description': 'Test Description',
+            'genre': self.genre.id,
+            'video_file': video_file
+        }
+        response = self.client.post(self.upload_url, data, format='multipart')
+        # Video list endpoint is GET-only, POST not allowed
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_admin_can_access_video_list(self):
+        """Test admin user can access video list via GET."""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.get(self.upload_url)
+        # Admin should have normal GET access like any authenticated user
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
