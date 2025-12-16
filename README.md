@@ -2,12 +2,12 @@
 
 A Django REST API backend for a Netflix-like video streaming platform with HLS (HTTP Live Streaming) support, JWT authentication, and background video processing.
 
-## � Live Demo
+## 🌐 Live Demo
 
 Check out the live application:
 **https://videoflix.offermanns.dev**
 
-## �🎯 Frontend Example
+## 🎯 Frontend Example
 
 An example frontend implementation using vanilla JavaScript is available at:
 **https://github.com/Developer-Akademie-Backendkurs/project.Videoflix**
