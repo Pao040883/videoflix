@@ -158,10 +158,12 @@ CSRF_TRUSTED_ORIGINS=http://localhost:4200,http://127.0.0.1:4200  # For Django A
 
 ### JWT Token Settings
 
-Access token lifetime: **5 minutes**  
+Access token lifetime: **25 minutes**  
 Refresh token lifetime: **7 days**
 
 Tokens are stored in **HttpOnly cookies** for security.
+
+> **Note:** Access token lifetime set to 25 minutes to match frontend refresh interval (20 minutes) with safety margin.
 
 ## 🎮 Running the Application
 
