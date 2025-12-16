@@ -139,21 +139,29 @@ def logout(request):
         Response: HTTP 200 with success message.
         Response: HTTP 400 if refresh token missing.
     """
+    logger = logging.getLogger(__name__)
+    logger.info(f"Logout request received - User: {request.user}, IP: {request.META.get('REMOTE_ADDR')}")
+    
     refresh_token = request.COOKIES.get('refresh_token')
+    logger.info(f"Refresh token present: {bool(refresh_token)}")
     
     if refresh_token:
         try:
+            logger.info("Attempting to blacklist refresh token...")
             token = RefreshToken(refresh_token)
             token.blacklist()
-        except Exception:
-            pass
+            logger.info("Refresh token successfully blacklisted")
+        except Exception as e:
+            logger.error(f"Error blacklisting token: {str(e)}", exc_info=True)
     
+    logger.info("Preparing logout response with deleted cookies")
     response = Response(
         {"detail": "Logout successful! All tokens will be deleted. Refresh token is now invalid."},
         status=status.HTTP_200_OK
     )
     response.delete_cookie('access_token')
     response.delete_cookie('refresh_token')
+    logger.info("Logout completed successfully")
     return response
 
 
