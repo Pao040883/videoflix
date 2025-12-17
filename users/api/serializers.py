@@ -1,6 +1,3 @@
-"""
-User serializers.
-"""
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from users.models import CustomUser

@@ -1,6 +1,3 @@
-"""
-User views.
-"""
 import base64
 import logging
 from rest_framework import status, permissions

@@ -1,6 +1,3 @@
-"""
-Video URLs.
-"""
 from django.urls import path
 from videos.api.views import (
     video_list,

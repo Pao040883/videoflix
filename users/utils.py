@@ -28,7 +28,6 @@ def load_logo_image():
 
 
 def create_mime_image(img_data):
-    """Create MIMEImage with CID for email embedding."""
     image_cid = 'videoflix_logo@videoflix.com'
     image_mime = MIMEImage(img_data)
     image_mime.add_header('Content-ID', f'<{image_cid}>')
@@ -37,7 +36,6 @@ def create_mime_image(img_data):
 
 
 def send_verification_email(user, verification_link):
-    """Send account verification email to user"""
     logger.info(f"Starting to send verification email to {user.email}")
     try:
         img_data = load_logo_image()
@@ -56,7 +54,6 @@ def send_verification_email(user, verification_link):
 
 
 def send_password_reset_email(user, reset_link):
-    """Send password reset email to user"""
     try:
         img_data = load_logo_image()
         image_mime, image_cid = create_mime_image(img_data)

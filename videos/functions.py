@@ -43,15 +43,6 @@ def process_video(video_id):
 
 
 def mark_video_processing_failed(video_id):
-    """
-    Mark video as processing failed.
-    
-    Args:
-        video_id: Primary key of Video object.
-    
-    Returns:
-        None
-    """
     try:
         video = Video.objects.get(id=video_id)
         video.is_processing = False

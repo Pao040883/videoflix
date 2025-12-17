@@ -114,7 +114,6 @@ def generate_thumbnail(video):
 
 
 def get_video_duration(video_path):
-    """Extract video duration using FFprobe, returns seconds as int or None on error."""
     try:
         command = build_ffprobe_duration_command(video_path)
         result = subprocess.run(command, capture_output=True, text=True, check=True)
