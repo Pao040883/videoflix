@@ -70,7 +70,6 @@ def process_single_quality(video, hls_dir, quality, settings_dict):
     command = build_ffmpeg_hls_command(video.video_file.path, output_file, segment_pattern, settings_dict)
     subprocess.run(command, check=True, capture_output=True)
     create_hls_quality_record(video, quality, settings_dict)
-    logger.info(f"Generated {quality} stream for video {video.id}")
 
 
 def finalize_video_processing(video, hls_dir):
@@ -84,13 +83,11 @@ def generate_hls_streams(video):
     video.is_processing = True
     video.save()
     try:
-        logger.info(f"Starting HLS generation for video {video.id}")
         hls_dir = os.path.join(settings.HLS_OUTPUT_PATH, f'video_{video.id}')
         os.makedirs(hls_dir, exist_ok=True)
         for quality, settings_dict in QUALITY_SETTINGS.items():
             process_single_quality(video, hls_dir, quality, settings_dict)
         finalize_video_processing(video, hls_dir)
-        logger.info(f"Completed HLS generation for video {video.id}")
     except Exception as e:
         logger.error(f"HLS generation failed for video {video.id}: {type(e).__name__}: {str(e)}", exc_info=True)
         video.is_processing = False
@@ -108,7 +105,6 @@ def generate_thumbnail(video):
         subprocess.run(command, check=True, capture_output=True)
         video.thumbnail = f'thumbnails/{thumbnail_filename}'
         video.save(update_fields=['thumbnail'])
-        logger.info(f"Generated thumbnail for video {video.id}")
     except subprocess.CalledProcessError as e:
         logger.error(f"FFmpeg thumbnail error for video {video.id}: {str(e)}")
 

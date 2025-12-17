@@ -22,7 +22,6 @@ def load_logo_image():
     if not os.path.exists(logo_path):
         logger.warning("Logo file not found, using Base64 fallback")
         return base64.b64decode(VIDEOFLIX_LOGO_BASE64)
-    logger.info(f"Logo found at: {logo_path}")
     with open(logo_path, 'rb') as f:
         return f.read()
 
@@ -36,7 +35,6 @@ def create_mime_image(img_data):
 
 
 def send_verification_email(user, verification_link):
-    logger.info(f"Starting to send verification email to {user.email}")
     try:
         img_data = load_logo_image()
         image_mime, image_cid = create_mime_image(img_data)
@@ -46,7 +44,6 @@ def send_verification_email(user, verification_link):
         email.attach_alternative(html_content, "text/html")
         email.attach(image_mime)
         email.send()
-        logger.info(f"Verification email sent successfully to {user.email}")
         return True
     except Exception as e:
         logger.error(f"Error sending verification email to {user.email}: {e}", exc_info=True)
@@ -63,7 +60,6 @@ def send_password_reset_email(user, reset_link):
         email.attach_alternative(html_content, "text/html")
         email.attach(image_mime)
         email.send()
-        logger.info(f"Password reset email sent to {user.email}")
         return True
     except Exception as e:
         logger.error(f"Error sending password reset email to {user.email}: {e}", exc_info=True)
