@@ -55,7 +55,12 @@ class Video(models.Model):
     description = models.TextField()
     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True, related_name='videos')
     video_file = models.FileField(upload_to='videos/uploads/')
-    thumbnail = models.ImageField(upload_to='thumbnails/', null=True, blank=True)
+    thumbnail = models.ImageField(
+        upload_to='thumbnails/', 
+        null=True, 
+        blank=True,
+        help_text='Automatically generated from video at 5 seconds if not uploaded.'
+    )
     hls_path = models.CharField(max_length=255, blank=True, null=True)
     duration = models.IntegerField(null=True, blank=True)
     is_published = models.BooleanField(default=True)

@@ -31,7 +31,10 @@ def process_video(video_id):
     video.duration = duration
     video.save(update_fields=['duration'])
     
-    generate_thumbnail(video)
+    # Generate thumbnail only if not manually uploaded
+    if not video.thumbnail:
+        generate_thumbnail(video)
+    
     generate_hls_streams(video)
     
     video.is_processing = False
@@ -58,7 +61,6 @@ def mark_video_processing_failed(video_id):
 
 
 def get_video_hls_path(movie_id, resolution):
-    """Get HLS manifest file path for video."""
     hls_dir = os.path.join(settings.HLS_OUTPUT_PATH, f'video_{movie_id}')
     manifest_file = os.path.join(hls_dir, f'{resolution}.m3u8')
     if not os.path.exists(manifest_file):
@@ -67,7 +69,6 @@ def get_video_hls_path(movie_id, resolution):
 
 
 def get_hls_segment_path(movie_id, segment):
-    """Get HLS segment file path for video."""
     hls_dir = os.path.join(settings.HLS_OUTPUT_PATH, f'video_{movie_id}')
     segment_file = os.path.join(hls_dir, f'{segment}')
     if not os.path.exists(segment_file):
@@ -76,7 +77,6 @@ def get_hls_segment_path(movie_id, segment):
 
 
 def create_cors_response(file_path, content_type, request, disposition=None, cache_control=None):
-    """Create FileResponse with CORS headers."""
     response = FileResponse(open(file_path, 'rb'), content_type=content_type)
     if disposition:
         response['Content-Disposition'] = disposition

@@ -3,12 +3,10 @@ User views.
 """
 import base64
 import logging
-from rest_framework import generics, status, permissions
+from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.db import transaction
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.utils.decorators import method_decorator
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from django.conf import settings
@@ -37,7 +35,9 @@ from users.api.serializers import (
 logger = logging.getLogger(__name__)
 
 
-class RegisterView(generics.CreateAPIView):
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def register(request):
     """
     API view for user registration with email verification.
     
@@ -45,33 +45,30 @@ class RegisterView(generics.CreateAPIView):
     an email verification token is generated and a confirmation email is sent
     to the user's email address. The user account remains inactive until verified.
     
-    Attributes:
-        queryset: All CustomUser objects.
-        serializer_class: RegisterSerializer for validation.
-        permission_classes: [AllowAny] - No authentication required for registration.
+    Args:
+        request: HTTP POST request with email, password, and confirmed_password.
+    
+    Returns:
+        Response: HTTP 201 with user data and success message.
+        Response: HTTP 500 if email sending fails.
     """
-    queryset = CustomUser.objects.all()
-    serializer_class = RegisterSerializer
-    permission_classes = [permissions.AllowAny]
-
-    def create(self, request, *args, **kwargs):
-        """Create a new user account with email verification."""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        try:
-            with transaction.atomic():
-                user = serializer.save()
-                response_data = create_user_with_verification(user)
-            return Response(response_data, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response(
-                {"error": "Registration failed. Could not send verification email. Please try again later."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+    serializer = RegisterSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    try:
+        with transaction.atomic():
+            user = serializer.save()
+            response_data = create_user_with_verification(user)
+        return Response(response_data, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response(
+            {"error": "Registration failed. Could not send verification email. Please try again later."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
-@method_decorator(ensure_csrf_cookie, name='dispatch')
-class LoginView(generics.GenericAPIView):
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def login(request):
     """
     API view for user authentication and JWT token generation.
     
@@ -80,40 +77,50 @@ class LoginView(generics.GenericAPIView):
     users with verified email addresses can log in. Also sets CSRF cookie for
     frontend compatibility.
     
-    Attributes:
-        serializer_class: LoginSerializer for credential validation.
-        permission_classes: [AllowAny] - No authentication required for login.
+    Args:
+        request: HTTP POST request with email and password.
+    
+    Returns:
+        Response: HTTP 200 with user data and JWT cookies.
     """
-    serializer_class = LoginSerializer
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request, *args, **kwargs):
-        """
-        Authenticate user and issue JWT tokens.
-        
-        Args:
-            request: HTTP request containing email and password.
-        
-        Returns:
-            Response: HTTP 200 with user data and JWT cookies.
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        
-        access_token, refresh_token = generate_jwt_tokens(user)
-        
-        response = Response(
-            {"detail": "Login successful", "user": {"id": user.id, "username": user.email}},
-            status=status.HTTP_200_OK
-        )
-        return set_jwt_cookies(response, access_token, refresh_token)
+    serializer = LoginSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user = serializer.validated_data['user']
+    
+    access_token, refresh_token = generate_jwt_tokens(user)
+    
+    response = Response(
+        {"detail": "Login successful", "user": {"id": user.id, "username": user.email}},
+        status=status.HTTP_200_OK
+    )
+    response = set_jwt_cookies(response, access_token, refresh_token)
+    
+    # Set CSRF cookie for frontend compatibility
+    from django.middleware.csrf import get_token
+    get_token(request)
+    
+    return response
 
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def activate_account(request, uidb64, token):
-    """Activate user account via email verification link."""
+    """
+    Activate user account via email verification link.
+    
+    Decodes the base64-encoded user ID and validates the verification token.
+    Token must not be expired (24-hour validity). Upon successful validation,
+    user's is_active and is_email_verified flags are set to True.
+    
+    Args:
+        request: HTTP GET request.
+        uidb64: Base64-encoded user ID.
+        token: Email verification token string.
+    
+    Returns:
+        Response: HTTP 200 if activation successful.
+        Response: HTTP 400 if link invalid or expired.
+    """
     try:
         user = decode_uid_and_get_user(uidb64)
         verification_token = EmailVerificationToken.objects.get(user=user, token=token)
@@ -194,7 +201,22 @@ def password_reset(request):
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def password_reset_confirm(request, uidb64, token):
-    """Confirm password reset and update user password."""
+    """
+    Confirm password reset and update user password.
+    
+    Validates password reset token (1-hour validity) and updates user password
+    if token is valid. Requires new_password and confirm_password fields that
+    must match and meet minimum length requirements (8 characters).
+    
+    Args:
+        request: HTTP POST request with new_password and confirm_password.
+        uidb64: Base64-encoded user ID.
+        token: Password reset token string.
+    
+    Returns:
+        Response: HTTP 200 if password reset successful.
+        Response: HTTP 400 if link invalid, expired, or passwords don't match.
+    """
     try:
         user = decode_uid_and_get_user(uidb64)
         reset_token = PasswordResetToken.objects.get(user=user, token=token)

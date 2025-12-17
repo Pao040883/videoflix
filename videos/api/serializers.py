@@ -45,11 +45,9 @@ class VideoListSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
     def get_category(self, obj):
-        """Get genre name from related Genre object."""
         return obj.genre.name if obj.genre else None
 
     def get_thumbnail_url(self, obj):
-        """Build absolute URL for thumbnail image."""
         if obj.thumbnail:
             request = self.context.get('request')
             if request:
@@ -87,11 +85,9 @@ class VideoDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at', 'hls_path', 'hls_qualities']
 
     def get_category(self, obj):
-        """Get genre name from related Genre object."""
         return obj.genre.name if obj.genre else None
 
     def get_thumbnail_url(self, obj):
-        """Build absolute URL for thumbnail image."""
         if obj.thumbnail:
             request = self.context.get('request')
             if request:

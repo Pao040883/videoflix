@@ -83,7 +83,7 @@ An example frontend implementation using vanilla JavaScript is available at:
 
 ```bash
 git clone https://github.com/Pao040883/videoflix.git
-cd videoflix/backend
+cd videoflix
 ```
 
 ### 2. Configure Environment Variables
@@ -102,6 +102,13 @@ SECRET_KEY=your-secret-key-here
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1,web
 
+# CORS and CSRF Configuration (Port 5500 for JavaScript/Live Server)
+CSRF_TRUSTED_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
+CORS_ALLOWED_ORIGINS=http://127.0.0.1:5500,http://localhost:5500
+
+# Frontend URL for email verification links
+FRONTEND_URL=http://127.0.0.1:5500
+
 # Database
 DB_NAME=videoflix_db
 DB_USER=videoflix_user
@@ -113,6 +120,7 @@ DB_PORT=5432
 REDIS_HOST=redis
 REDIS_PORT=6379
 REDIS_DB=0
+REDIS_PASSWORD=
 
 # Email Configuration
 EMAIL_HOST=smtp.your-provider.com
@@ -120,10 +128,8 @@ EMAIL_PORT=587
 EMAIL_HOST_USER=your-email@example.com
 EMAIL_HOST_PASSWORD=your-email-password
 EMAIL_USE_TLS=True
+EMAIL_USE_SSL=False
 DEFAULT_FROM_EMAIL=your-email@example.com
-
-# Frontend URL (for email links)
-FRONTEND_URL=http://127.0.0.1:5500
 
 # Django Superuser
 DJANGO_SUPERUSER_USERNAME=admin
@@ -153,8 +159,12 @@ This will:
 Configure allowed origins in `.env`:
 
 ```env
+# CORS and CSRF Configuration (Port 5500 for JavaScript/Live Server)
+CSRF_TRUSTED_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
 CORS_ALLOWED_ORIGINS=http://127.0.0.1:5500,http://localhost:5500
-CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000  # For Django Admin only
+
+# Frontend URL for email verification links
+FRONTEND_URL=http://127.0.0.1:5500
 ```
 
 ### JWT Token Settings
@@ -323,9 +333,10 @@ All tests use Django's `TestCase` with isolated test databases and DRF's `APICli
 ### How it Works
 
 1. **Upload Video** via Django Admin
+   - Optionally upload custom thumbnail (or leave empty for auto-generation)
 2. **Background Processing** triggered automatically:
    - Extract video duration
-   - Generate thumbnail (at 5 seconds)
+   - Generate thumbnail (at 5 seconds) if not manually uploaded
    - Transcode to HLS format (3 qualities)
 3. **Video Published** and ready for streaming
 

@@ -32,7 +32,6 @@ QUALITY_SETTINGS = {
 
 
 def build_ffmpeg_hls_command(video_path, output_file, segment_pattern, settings_dict):
-    """Build FFmpeg command for HLS transcoding."""
     return [
         'ffmpeg', '-i', video_path,
         '-vf', f"scale={settings_dict['scale']}",
@@ -49,7 +48,6 @@ def build_ffmpeg_hls_command(video_path, output_file, segment_pattern, settings_
 
 
 def create_hls_quality_record(video, quality, settings_dict):
-    """Create HLSQuality database record."""
     HLSQuality.objects.create(
         video=video,
         quality=quality,
@@ -59,17 +57,14 @@ def create_hls_quality_record(video, quality, settings_dict):
 
 
 def build_thumbnail_command(video_path, thumbnail_file):
-    """Build FFmpeg command for thumbnail extraction."""
     return ['ffmpeg', '-i', video_path, '-ss', '00:00:05', '-vf', 'scale=320:-1', '-frames:v', '1', '-y', thumbnail_file]
 
 
 def build_ffprobe_duration_command(video_path):
-    """Build FFprobe command for duration extraction."""
     return ['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1:noprint_wrappers=1', video_path]
 
 
 def process_single_quality(video, hls_dir, quality, settings_dict):
-    """Process single HLS quality variant."""
     output_file = os.path.join(hls_dir, f'{quality}.m3u8')
     segment_pattern = os.path.join(hls_dir, f'{quality}_%03d.ts')
     command = build_ffmpeg_hls_command(video.video_file.path, output_file, segment_pattern, settings_dict)
@@ -79,7 +74,6 @@ def process_single_quality(video, hls_dir, quality, settings_dict):
 
 
 def finalize_video_processing(video, hls_dir):
-    """Finalize video processing by updating paths and status."""
     video.hls_path = f'hls/video_{video.id}/'
     video.is_processing = False
     video.save()

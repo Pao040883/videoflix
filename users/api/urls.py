@@ -3,8 +3,8 @@ User URLs.
 """
 from django.urls import path
 from users.api.views import (
-    RegisterView,
-    LoginView,
+    register,
+    login,
     logout,
     activate_account,
     password_reset,
@@ -14,8 +14,8 @@ from users.api.views import (
 )
 
 urlpatterns = [
-    path('register/', RegisterView.as_view(), name='register'),
-    path('login/', LoginView.as_view(), name='login'),
+    path('register/', register, name='register'),
+    path('login/', login, name='login'),
     path('logout/', logout, name='logout'),
     path('token/refresh/', token_refresh, name='token_refresh'),
     path('activate/<str:uidb64>/<str:token>/', activate_account, name='activate_account'),

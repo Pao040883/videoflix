@@ -26,17 +26,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ['email', 'password', 'confirmed_password']
 
     def validate(self, data):
-        """Validate that password and confirmed_password match."""
         validate_password_match(data['password'], data['confirmed_password'])
         return data
 
     def validate_email(self, value):
-        """Validate that email is unique and not already registered."""
         validate_email_unique(value)
         return value
 
     def create(self, validated_data):
-        """Create a new inactive user with hashed password."""
         validated_data.pop('confirmed_password')
         password = validated_data.pop('password')
         email = validated_data['email']
@@ -63,7 +60,6 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        """Authenticate user and verify email confirmation status."""
         user = validate_user_authentication(data['email'], data['password'])
         validate_email_verified(user)
         data['user'] = user
@@ -95,7 +91,6 @@ class PasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     def validate_email(self, value):
-        """Validate that email exists in the database."""
         if not CustomUser.objects.filter(email=value).exists():
             raise serializers.ValidationError(
                 "Please check your inputs and try again."
@@ -118,7 +113,6 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     confirm_password = serializers.CharField(write_only=True, min_length=8)
 
     def validate(self, data):
-        """Validate that new_password and confirm_password match."""
         validate_password_match(data['new_password'], data['confirm_password'])
         return data
 
